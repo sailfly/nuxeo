@@ -313,7 +313,7 @@ pipeline {
           sh """
             mvn ${MAVEN_ARGS} -Pdistrib,docker versions:set -DnewVersion=${VERSION} -DgenerateBackupPoms=false
             perl -i -pe 's|<nuxeo.platform.version>.*?</nuxeo.platform.version>|<nuxeo.platform.version>${VERSION}</nuxeo.platform.version>|' pom.xml
-            perl -i -pe 's|org.nuxeo.ecm.product.version=.*|org.nuxeo.ecm.product.version=${VERSION}|' nuxeo-distribution/nuxeo-nxr-server/src/main/resources/templates/nuxeo.defaults
+            perl -i -pe 's|org.nuxeo.ecm.product.version=.*|org.nuxeo.ecm.product.version=${VERSION}|' server/nuxeo-nxr-server/src/main/resources/templates/nuxeo.defaults
           """
         }
       }
@@ -408,7 +408,7 @@ pipeline {
           ----------------------------------------
           Package
           ----------------------------------------"""
-          sh "mvn ${MAVEN_ARGS} -f nuxeo-distribution/pom.xml -DskipTests install"
+          sh "mvn ${MAVEN_ARGS} -f server/pom.xml -DskipTests install"
           sh "mvn ${MAVEN_ARGS} -f packages/pom.xml -DskipTests install"
         }
       }
@@ -432,9 +432,6 @@ pipeline {
           ----------------------------------------"""
           script {
             try {
-              runFunctionalTests('nuxeo-distribution/nuxeo-server-tests')
-              runFunctionalTests('nuxeo-distribution/nuxeo-server-hotreload-tests')
-              runFunctionalTests('nuxeo-distribution/nuxeo-server-gatling-tests')
               runFunctionalTests('ftests')
               setGitHubBuildStatus('platform/ftests/dev', 'Functional tests - dev environment', 'SUCCESS')
             } catch (err) {
@@ -461,7 +458,7 @@ pipeline {
           Image tag: ${VERSION}
           """
           echo "Build and push Docker images to internal Docker registry ${DOCKER_REGISTRY}"
-          // Fetch Nuxeo distribution and Nuxeo Content Platform packages with Maven
+          // Fetch Nuxeo Tomcat Server and Nuxeo Content Platform packages with Maven
           sh "mvn ${MAVEN_ARGS} -f docker/pom.xml process-resources"
           skaffoldBuildAll()
         }
