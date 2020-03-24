@@ -363,6 +363,11 @@ pipeline {
     }
 
     stage('Run common unit tests') {
+      when {
+        not {
+          branch 'PR-*'
+        }
+      }
       steps {
         setGitHubBuildStatus('platform/utests/common/dev', 'Unit tests - common', 'PENDING')
         container('maven') {
@@ -389,6 +394,11 @@ pipeline {
     }
 
     stage('Run runtime unit tests') {
+      when {
+        not {
+          branch 'PR-*'
+        }
+      }
       steps {
         setGitHubBuildStatus('platform/utests/runtime/dev', 'Unit tests - runtime', 'PENDING')
         container('maven') {
@@ -415,6 +425,11 @@ pipeline {
     }
 
     stage('Run unit tests') {
+      when {
+        not {
+          branch 'PR-*'
+        }
+      }
       steps {
         script {
           def stages = [:]
@@ -449,6 +464,11 @@ pipeline {
     }
 
     stage('Run "dev" functional tests') {
+      when {
+        not {
+          branch 'PR-*'
+        }
+      }
       steps {
         setGitHubBuildStatus('platform/ftests/dev', 'Functional tests - dev environment', 'PENDING')
         container('maven') {
@@ -585,6 +605,11 @@ pipeline {
     }
 
     stage('Deploy Maven artifacts') {
+      when {
+        not {
+          branch 'PR-*'
+        }
+      }
       steps {
         setGitHubBuildStatus('platform/deploy', 'Deploy Maven artifacts', 'PENDING')
         container('maven') {
@@ -633,9 +658,8 @@ pipeline {
 
     stage('JSF pipeline') {
       when {
-        expression {
-          // only trigger JSF pipeline if the target branch is master or a maintenance branch
-          return CHANGE_TARGET ==~ 'master|\\d+\\.\\d+'
+        not {
+          branch 'PR-*'
         }
       }
       steps {
