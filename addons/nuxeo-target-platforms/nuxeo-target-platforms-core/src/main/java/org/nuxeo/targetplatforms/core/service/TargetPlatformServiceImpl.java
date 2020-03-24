@@ -497,7 +497,7 @@ public class TargetPlatformServiceImpl extends DefaultComponent implements Targe
                     doc.setProperty(DirectoryUpdater.SCHEMA, prop, value);
                     session.updateEntry(doc);
                 } else {
-                    DocumentModel entry = BaseSession.createEntryModel(null, DirectoryUpdater.SCHEMA, null, null);
+                    DocumentModel entry = BaseSession.createEntryModel(DirectoryUpdater.SCHEMA);
                     entry.setProperty(DirectoryUpdater.SCHEMA, prop, value);
                     entry.setProperty(DirectoryUpdater.SCHEMA, "id", id);
                     session.createEntry(entry);

@@ -742,7 +742,7 @@ public abstract class AbstractDirectoryTest {
     public void testCreateFromModel() throws Exception {
         try (Session session = getSession()) {
             String schema = "user";
-            DocumentModel entry = BaseSession.createEntryModel(null, schema, null, null);
+            DocumentModel entry = BaseSession.createEntryModel(schema);
             entry.setProperty("user", "username", "yo");
 
             assertNull(session.getEntry("yo"));
@@ -783,7 +783,7 @@ public abstract class AbstractDirectoryTest {
             try (Session session = dirtmp1.getSession()) {
 
                 String schema1 = "tmpschema1";
-                DocumentModel entry = BaseSession.createEntryModel(null, schema1, null, null);
+                DocumentModel entry = BaseSession.createEntryModel(schema1);
                 entry.setProperty(schema1, "id", "john");
                 entry.setProperty(schema1, "label", "monLabel");
 

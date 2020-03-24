@@ -73,7 +73,7 @@ public class TestNuxeoPrincipalImpl {
 
     @Test
     public void testCopyConstructorContextData() {
-        DocumentModel userModel = BaseSession.createEntryModel(null, "user", null, null);
+        DocumentModel userModel = BaseSession.createEntryModel("user");
         userModel.putContextData("readonly", true);
         NuxeoPrincipalImpl a = new NuxeoPrincipalImpl("foo");
         a.setModel(userModel);

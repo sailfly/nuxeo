@@ -62,18 +62,10 @@ public interface CoreSessionService {
      * Releases (closes) a {@link CloseableCoreSession} acquired by {@link #createCoreSession}.
      *
      * @param session the session to close
+     * @deprecated since 11.1, does nothing
      */
+    @Deprecated
     void releaseCoreSession(CloseableCoreSession session);
-
-    /**
-     * Gets an existing open session for the given session id.
-     * <p>
-     * The returned {@link CoreSession} must not be closed, as it is owned by someone else.
-     *
-     * @param sessionId the session id
-     * @return the session, which must not be closed
-     */
-    CoreSession getCoreSession(String sessionId);
 
     /**
      * Gets the number of open sessions.
@@ -84,7 +76,9 @@ public interface CoreSessionService {
      * Gets the debug info for the open sessions.
      *
      * @return a list of debug info
+     * @deprecated since 11.1, returns an empty list
      */
+    @Deprecated
     List<CoreSessionRegistrationInfo> getCoreSessionRegistrationInfos();
 
 }

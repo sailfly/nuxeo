@@ -305,7 +305,12 @@ public class SimpleDocumentModel implements DocumentModel {
     }
 
     @Override
-    public void attach(String sid) {
+    public void attach(CoreSession coreSession) {
+    }
+
+    @Override
+    public boolean isAttached() {
+        return false;
     }
 
     @Override

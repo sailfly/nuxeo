@@ -132,7 +132,7 @@ public class TestMemoryDirectory {
 
     @Test
     public void testCreateFromModel() {
-        entry = BaseSession.createEntryModel(null, SCHEMA_NAME, null, null);
+        entry = BaseSession.createEntryModel(SCHEMA_NAME);
         entry.setProperty(SCHEMA_NAME, "i", "yo");
 
         assertNull(dir.getEntry("yo"));
@@ -192,7 +192,7 @@ public class TestMemoryDirectory {
         String id = "no-such-entry";
         Map<String, Object> map = new HashMap<>();
         map.put("i", id);
-        DocumentModel entry = BaseSession.createEntryModel(null, SCHEMA_NAME, id, map);
+        DocumentModel entry = BaseSession.createEntryModel(SCHEMA_NAME, id, map);
         try {
             dir.updateEntry(entry);
         } catch (DirectoryException de) {

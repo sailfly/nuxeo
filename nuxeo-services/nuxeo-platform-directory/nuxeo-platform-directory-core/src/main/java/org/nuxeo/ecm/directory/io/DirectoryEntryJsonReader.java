@@ -27,7 +27,6 @@ import static org.nuxeo.ecm.directory.io.DirectoryEntryJsonWriter.ENTITY_TYPE;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -97,7 +96,7 @@ public class DirectoryEntryJsonReader extends EntityJsonReader<DirectoryEntry> {
                     entry = session.getEntry(id);
                 }
                 if (entry == null) {
-                    entry = BaseSession.createEntryModel(null, schema, id, new HashMap<String, Object>());
+                    entry = BaseSession.createEntryModel(schema, id, null);
                 }
                 ParameterizedType genericType = TypeUtils.parameterize(List.class, Property.class);
                 try (Closeable resource = ctx.wrap().with(DEFAULT_SCHEMA_NAME, schema).open()) {

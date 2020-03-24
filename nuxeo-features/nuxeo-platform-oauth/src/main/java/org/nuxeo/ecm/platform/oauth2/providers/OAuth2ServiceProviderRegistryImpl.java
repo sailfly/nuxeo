@@ -102,7 +102,7 @@ public class OAuth2ServiceProviderRegistryImpl extends DefaultComponent implemen
 
         DirectoryService ds = Framework.getService(DirectoryService.class);
         try (Session session = ds.open(DIRECTORY_NAME)) {
-            DocumentModel creationEntry = BaseSession.createEntryModel(null, SCHEMA, null, null);
+            DocumentModel creationEntry = BaseSession.createEntryModel(SCHEMA);
             DocumentModel entry = Framework.doPrivileged(() -> session.createEntry(creationEntry));
             entry.setProperty(SCHEMA, "serviceName", serviceName);
             entry.setProperty(SCHEMA, "description", description);

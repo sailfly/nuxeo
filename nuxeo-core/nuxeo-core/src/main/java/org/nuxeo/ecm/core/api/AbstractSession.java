@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -153,21 +154,47 @@ public abstract class AbstractSession implements CoreSession, Serializable {
     private Long maxResults;
 
     // @since 5.7.2
-    protected final MetricRegistry registry = SharedMetricRegistries.getOrCreate(MetricsService.class.getName());
+    protected static final MetricRegistry registry = SharedMetricRegistries.getOrCreate(MetricsService.class.getName());
 
+    // static caches shared by all threads
+    protected static final Map<String, Counter> CREATE_DOC_COUNT = new ConcurrentHashMap<>();
+
+    protected static final Map<String, Counter> DELETE_DOC_COUNT = new ConcurrentHashMap<>();
+
+    protected static final Map<String, Counter> UPDATE_DOC_COUNT = new ConcurrentHashMap<>();
+
+    // lazily initialized counters
     protected Counter createDocumentCount;
 
     protected Counter deleteDocumentCount;
 
     protected Counter updateDocumentCount;
 
-    protected void createMetrics() {
-        createDocumentCount = registry.counter(
-                MetricRegistry.name("nuxeo.repositories", getRepositoryName(), "documents", "create"));
-        deleteDocumentCount = registry.counter(
-                MetricRegistry.name("nuxeo.repositories", getRepositoryName(), "documents", "delete"));
-        updateDocumentCount = registry.counter(
-                MetricRegistry.name("nuxeo.repositories", getRepositoryName(), "documents", "update"));
+    protected void createDocumentCountInc() {
+        if (createDocumentCount == null) {
+            createDocumentCount = CREATE_DOC_COUNT.computeIfAbsent(getRepositoryName(),
+                    repositoryName -> registry.counter(
+                            MetricRegistry.name("nuxeo.repositories", repositoryName, "documents", "create")));
+        }
+        createDocumentCount.inc();
+    }
+
+    protected void deleteDocumentCountInc() {
+        if (deleteDocumentCount == null) {
+            deleteDocumentCount = DELETE_DOC_COUNT.computeIfAbsent(getRepositoryName(),
+                    repositoryName -> registry.counter(
+                            MetricRegistry.name("nuxeo.repositories", repositoryName, "documents", "delete")));
+        }
+        deleteDocumentCount.inc();
+    }
+
+    protected void updateDocumentCountInc() {
+        if (updateDocumentCount == null) {
+            updateDocumentCount = UPDATE_DOC_COUNT.computeIfAbsent(getRepositoryName(),
+                    repositoryName -> registry.counter(
+                            MetricRegistry.name("nuxeo.repositories", repositoryName, "documents", "update")));
+        }
+        updateDocumentCount.inc();
     }
 
     protected SecurityService getSecurityService() {
@@ -218,7 +245,6 @@ public abstract class AbstractSession implements CoreSession, Serializable {
     public DocumentEventContext newEventContext(DocumentModel source) {
         DocumentEventContext ctx = new DocumentEventContext(this, getPrincipal(), source);
         ctx.setProperty(CoreEventConstants.REPOSITORY_NAME, getRepositoryName());
-        ctx.setProperty(CoreEventConstants.SESSION_ID, getSessionId());
         return ctx;
     }
 
@@ -233,7 +259,6 @@ public abstract class AbstractSession implements CoreSession, Serializable {
             ctx.setProperties(options);
         }
         ctx.setProperty(CoreEventConstants.REPOSITORY_NAME, getRepositoryName());
-        ctx.setProperty(CoreEventConstants.SESSION_ID, getSessionId());
         // Document life cycle
         if (source != null && withLifeCycle) {
             String currentLifeCycleState = source.getCurrentLifeCycleState();
@@ -351,7 +376,7 @@ public abstract class AbstractSession implements CoreSession, Serializable {
      * @return the document model
      */
     protected DocumentModel readModel(Document doc) {
-        return DocumentModelFactory.createDocumentModel(doc, getSessionId(), null);
+        return DocumentModelFactory.createDocumentModel(doc, this);
     }
 
     /**
@@ -621,11 +646,7 @@ public abstract class AbstractSession implements CoreSession, Serializable {
 
     private DocumentModel createDocumentModelFromParentAndType(DocumentRef parentRef, String typeName,
             Map<String, Serializable> options) {
-        DocumentType docType = Framework.getService(SchemaManager.class).getDocumentType(typeName);
-        if (docType == null) {
-            throw new IllegalArgumentException(typeName + " is not a registered core type");
-        }
-        DocumentModel docModel = DocumentModelFactory.createDocumentModel(getSessionId(), docType, parentRef);
+        DocumentModel docModel = DocumentModelFactory.createDocumentModel(typeName, parentRef);
         if (options == null) {
             options = new HashMap<>();
         } else if (options.containsKey(CoreEventConstants.PARENT_PATH)
@@ -674,9 +695,8 @@ public abstract class AbstractSession implements CoreSession, Serializable {
         CharacterFilteringService charFilteringService = Framework.getService(CharacterFilteringService.class);
         charFilteringService.filter(docModel);
 
-        if (docModel.getSessionId() == null) {
-            // docModel was created using constructor instead of CoreSession.createDocumentModel
-            docModel.attach(getSessionId());
+        if (!docModel.isAttached()) {
+            docModel.attach(this);
         }
         String typeName = docModel.getType();
         DocumentRef parentRef = docModel.getParentRef();
@@ -738,7 +758,7 @@ public abstract class AbstractSession implements CoreSession, Serializable {
         notifyEvent(DocumentEventTypes.DOCUMENT_CREATED, docModel, options, null, null, true, false);
         docModel = writeModel(doc, docModel);
 
-        createDocumentCount.inc();
+        createDocumentCountInc();
         return docModel;
     }
 
@@ -1410,7 +1430,7 @@ public abstract class AbstractSession implements CoreSession, Serializable {
             e.addInfo("Failed to remove document " + doc.getUUID());
             throw e;
         }
-        deleteDocumentCount.inc();
+        deleteDocumentCountInc();
     }
 
     protected void removeNotifyOneDoc(Document doc) {
@@ -1613,7 +1633,7 @@ public abstract class AbstractSession implements CoreSession, Serializable {
         }
 
         notifyEvent(DocumentEventTypes.DOCUMENT_UPDATED, docModel, options, null, null, true, false);
-        updateDocumentCount.inc();
+        updateDocumentCountInc();
 
         // Notify that proxies have been updated
         List<Document> proxies = getSession().getProxies(doc);

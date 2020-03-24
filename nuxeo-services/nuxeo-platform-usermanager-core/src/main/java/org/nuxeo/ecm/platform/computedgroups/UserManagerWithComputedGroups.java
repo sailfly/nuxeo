@@ -221,7 +221,7 @@ public class UserManagerWithComputedGroups extends UserManagerImpl {
 
         String schemaName = getGroupSchemaName();
         String id = getGroupIdField();
-        DocumentModel groupDoc = BaseSession.createEntryModel(null, schemaName, grpName, null);
+        DocumentModel groupDoc = BaseSession.createEntryModel(schemaName, grpName, null);
 
         groupDoc.setProperty(schemaName, getGroupMembersField(), grp.getMemberUsers());
         groupDoc.setProperty(schemaName, id, grp.getName());

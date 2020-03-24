@@ -482,7 +482,7 @@ public class UserManagerImpl implements UserManager, MultiTenantUserManager, Adm
 
     protected DocumentModel getDigestAuthModel() {
         String schema = dirService.getDirectorySchema(digestAuthDirectory);
-        return BaseSession.createEntryModel(null, schema, null, null);
+        return BaseSession.createEntryModel(schema);
     }
 
     public static String encodeDigestAuthPassword(String username, String realm, String password) {
@@ -522,7 +522,7 @@ public class UserManagerImpl implements UserManager, MultiTenantUserManager, Adm
     }
 
     protected NuxeoPrincipal makeTransientPrincipal(String username) {
-        DocumentModel userEntry = BaseSession.createEntryModel(null, userSchemaName, username, null);
+        DocumentModel userEntry = BaseSession.createEntryModel(userSchemaName, username, null);
         userEntry.setProperty(userSchemaName, userIdField, username);
         NuxeoPrincipal principal = makePrincipal(userEntry, false, true, null);
         String[] parts = username.split("/");
@@ -533,7 +533,7 @@ public class UserManagerImpl implements UserManager, MultiTenantUserManager, Adm
     }
 
     protected DocumentModel makeVirtualUserEntry(String id, VirtualUser user) {
-        final DocumentModel userEntry = BaseSession.createEntryModel(null, userSchemaName, id, null);
+        final DocumentModel userEntry = BaseSession.createEntryModel(userSchemaName, id, null);
         // at least fill id field
         userEntry.setProperty(userSchemaName, userIdField, id);
         for (Entry<String, Serializable> prop : user.getProperties().entrySet()) {
@@ -626,7 +626,7 @@ public class UserManagerImpl implements UserManager, MultiTenantUserManager, Adm
     @Override
     public DocumentModel getBareUserModel() {
         String schema = dirService.getDirectorySchema(userDirectoryName);
-        return BaseSession.createEntryModel(null, schema, null, null);
+        return BaseSession.createEntryModel(schema);
     }
 
     @Override
@@ -1041,7 +1041,7 @@ public class UserManagerImpl implements UserManager, MultiTenantUserManager, Adm
     @Override
     public DocumentModel getBareGroupModel() {
         String schema = dirService.getDirectorySchema(groupDirectoryName);
-        return BaseSession.createEntryModel(null, schema, null, null);
+        return BaseSession.createEntryModel(schema);
     }
 
     @Override

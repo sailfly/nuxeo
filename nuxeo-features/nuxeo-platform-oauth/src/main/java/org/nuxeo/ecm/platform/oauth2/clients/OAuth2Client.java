@@ -183,7 +183,7 @@ public class OAuth2Client {
      * @since 11.1
      */
     public static DocumentModel fromOAuth2Client(OAuth2Client oAuth2Client) {
-        return BaseSession.createEntryModel(null, OAUTH2CLIENT_SCHEMA, null, toMap(oAuth2Client));
+        return BaseSession.createEntryModel(OAUTH2CLIENT_SCHEMA, null, toMap(oAuth2Client));
     }
 
     /**
