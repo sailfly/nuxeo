@@ -92,9 +92,9 @@
     <module>nuxeo-theme</module>
     <module>nuxeo-webengine</module>
     <module>nuxeo-dm</module>
-	<!--<module>addons-core</module>
+	<module>addons-core</module>
     <module>addons</module>
-    <module>nuxeo-distribution</module>-->
+    <module>nuxeo-distribution</module>
   </modules>
 
   <properties>

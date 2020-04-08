@@ -691,8 +691,10 @@
           <plugin>
             <groupId>org.jboss.tattletale</groupId>
             <artifactId>tattletale-maven</artifactId>
+            <version>1.2.0.Beta2</version>
             <configuration>
               <source>${project.build.directory}/nxr/lib:${project.build.directory}/nxr/bundles</source>
+              <destination/>
             </configuration>
           </plugin>
         </plugins>

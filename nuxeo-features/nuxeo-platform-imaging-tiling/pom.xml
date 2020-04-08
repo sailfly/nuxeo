@@ -13,6 +13,7 @@
 
   <modules>
     <module>nuxeo-platform-imaging-tiling</module>
+    <module>nuxeo-platform-imaging-tiling-preview</module>
   </modules>
 
   <profiles>

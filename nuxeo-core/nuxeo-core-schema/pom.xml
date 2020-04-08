@@ -40,4 +40,35 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <target.dir>D:\Tools\Apps\nuxeo-server-10.10-tomcat-aicm\nxserver\bundles</target.dir>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <tasks>
+                <mkdir dir="${target.dir}"/>
+                <copy todir="${target.dir}" overwrite="true" >
+                  <fileset dir="${project.build.directory}" erroronmissingdir="true">
+                    <include name="*.jar"/>
+                  </fileset>
+                </copy>
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>
