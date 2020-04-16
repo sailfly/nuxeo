@@ -22,6 +22,7 @@
 package org.nuxeo.ecm.core.schema;
 
 import java.io.File;
+import java.io.InputStream;
 
 import org.nuxeo.common.xmap.annotation.XNode;
 import org.nuxeo.common.xmap.annotation.XObject;
@@ -53,6 +54,11 @@ public class SchemaBindingDescriptor {
     @XNode("@xsdRootElement")
     public String xsdRootElement;
 
+    /**
+     * 适用于内部api加载指定的字符输入流
+     */
+    private InputStream inputStream = null;
+
     // this is set by the type service to the context that knows how to locate
     // the schema file
     public RuntimeContext context;
@@ -63,6 +69,22 @@ public class SchemaBindingDescriptor {
     public SchemaBindingDescriptor(String name, String prefix) {
         this.name = name;
         this.prefix = prefix;
+    }
+
+    public SchemaBindingDescriptor(String name, String src, String prefix, boolean override, RuntimeContext context) {
+        this.name = name;
+        this.src = src;
+        this.prefix = prefix;
+        this.override = override;
+        this.context = context;
+    }
+
+    public InputStream getInputStream() {
+        return inputStream;
+    }
+
+    public void setInputStream(InputStream inputStream) {
+        this.inputStream = inputStream;
     }
 
     @Override

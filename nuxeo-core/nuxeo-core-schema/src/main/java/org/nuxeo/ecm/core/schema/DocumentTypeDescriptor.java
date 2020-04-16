@@ -83,6 +83,12 @@ public class DocumentTypeDescriptor {
         this.forbiddenSubtypes = forbiddenSubtypes;
     }
 
+    public DocumentTypeDescriptor(String superTypeName, String name, SchemaDescriptor[] schemas, String[] facets, String[] subtypes, String[] forbiddenSubtypes, String prefetch, boolean append) {
+        this(superTypeName, name, schemas, facets, subtypes, forbiddenSubtypes);
+        this.prefetch = prefetch;
+        this.append = append;
+    }
+
     @Override
     public String toString() {
         return "DocType: " + name;

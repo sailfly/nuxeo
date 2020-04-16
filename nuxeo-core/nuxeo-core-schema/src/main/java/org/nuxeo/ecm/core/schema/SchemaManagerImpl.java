@@ -127,7 +127,12 @@ public class SchemaManagerImpl implements SchemaManager {
 
     private File schemaDir;
 
+    /**memory schema dir*/
+    private File memorySchemaDir;
+
     public static final String SCHEMAS_DIR_NAME = "schemas";
+
+    public static final String MEMORY_SCHEMAS_DIR_NAME = "schemas_mem";
 
     /**
      * Default used for clearComplexPropertyBeforeSet if there is no XML configuration found.
@@ -149,6 +154,10 @@ public class SchemaManagerImpl implements SchemaManager {
         schemaDir = new File(Environment.getDefault().getTemp(), SCHEMAS_DIR_NAME);
         schemaDir.mkdirs();
         clearSchemaDir();
+
+        memorySchemaDir = new File(Environment.getDefault().getTemp(), MEMORY_SCHEMAS_DIR_NAME);
+        memorySchemaDir.mkdirs();
+
         registerBuiltinTypes();
     }
 
@@ -273,6 +282,17 @@ public class SchemaManagerImpl implements SchemaManager {
         return last;
     }
 
+    // for tests
+    public SchemaBindingDescriptor getSchemaBindingDescriptor(String name) {
+        SchemaBindingDescriptor last = null;
+        for (SchemaBindingDescriptor sdb : allSchemas) {
+            if (sdb.name.equals(name)) {
+                last = sdb;
+            }
+        }
+        return last;
+    }
+
     // NXP-14218: used for tests, to be able to unregister it
     public FacetDescriptor getFacetDescriptor(String name) {
         return allFacets.stream().filter(f -> f.getName().equals(name)).reduce((a, b) -> b).orElse(null);
@@ -372,15 +392,16 @@ public class SchemaManagerImpl implements SchemaManager {
                     log.warn("Schema " + name + " is redefined but will not be overridden");
                     continue;
                 }
-                log.debug("Reregistering schema: " + name + " from " + sd.file);
+//                log.debug("Reregistering schema: " + name + " from " + sd.file);
+                log.debug("Reregistering schema: " + name + " from " + (sd.file != null ? sd.file : "runtime"));
             } else {
-                log.debug("Registering schema: " + name + " from " + sd.file);
+                log.debug("Registering schema: " + name + " from " + (sd.file != null ? sd.file : "runtime"));
             }
             resolvedSchemas.put(name, sd);
         }
         for (SchemaBindingDescriptor sd : resolvedSchemas.values()) {
             try {
-                copySchema(sd);
+                copyRuntimeSchema(sd);
             } catch (IOException error) {
                 errors.addSuppressed(error);
             }
@@ -394,6 +415,25 @@ public class SchemaManagerImpl implements SchemaManager {
         }
         if (errors.getSuppressed().length > 0) {
             throw errors;
+        }
+    }
+
+    private void copyRuntimeSchema(SchemaBindingDescriptor sd) throws IOException {
+        InputStream inputStream = sd.getInputStream();
+        // 从输入流中复制到临时目录，及临时内存目录
+        if (inputStream != null) {
+            File memFile = new File(memorySchemaDir, sd.name + ".xsd");
+            if (inputStream.available() > 0) {
+                FileUtils.copyInputStreamToFile(inputStream, memFile);
+            }
+
+            // 从临时内存文件读取,写入临时目录。防止刷新schema时丢失
+            if (memFile.exists()) {
+                sd.file = new File(schemaDir, sd.name + ".xsd");
+                FileUtils.copyFile(memFile, sd.file);
+            }
+        } else {
+            copySchema(sd);
         }
     }
 
