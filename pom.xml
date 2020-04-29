@@ -7106,7 +7106,7 @@
     </pluginRepository>
   </pluginRepositories>
 
-  <distributionManagement>
+  <!--<distributionManagement>
     <site>
       <id>maven-website</id>
       <url>scpexe://gironde.nuxeo.com/home/mavenweb/site/</url>
@@ -7123,6 +7123,19 @@
         http://mavenin.nuxeo.com/nexus/content/repositories/public-snapshots
       </url>
       <uniqueVersion>true</uniqueVersion>
+    </snapshotRepository>
+  </distributionManagement>-->
+
+  <distributionManagement>
+    <repository>
+      <id>ecm-maven-release</id>
+      <name>releaseRepository</name>
+      <url>http://repo.hexinfo.cn:8000/artifactory/ecm-maven-release</url>
+    </repository>
+    <snapshotRepository>
+      <id>ecm-maven-dev</id>
+      <name>snapshotRepository</name>
+      <url>http://repo.hexinfo.cn:8000/artifactory/ecm-maven-dev</url>
     </snapshotRepository>
   </distributionManagement>
 

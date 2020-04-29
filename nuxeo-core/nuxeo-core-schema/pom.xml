@@ -44,14 +44,14 @@
 
   <distributionManagement>
     <repository>
-      <id>ecm-maven-dev</id>
-      <name>snapshotRepository</name>
-      <url>http://repo.hexinfo.cn:8000/artifactory/ecm-maven-dev</url>
-    </repository>
-    <snapshotRepository>
       <id>ecm-maven-release</id>
       <name>releaseRepository</name>
       <url>http://repo.hexinfo.cn:8000/artifactory/ecm-maven-release</url>
+    </repository>
+    <snapshotRepository>
+      <id>ecm-maven-dev</id>
+      <name>snapshotRepository</name>
+      <url>http://repo.hexinfo.cn:8000/artifactory/ecm-maven-dev</url>
     </snapshotRepository>
   </distributionManagement>
 
@@ -80,6 +80,21 @@
                 </copy>
               </tasks>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.0.1</version>
+        <configuration>
+          <attach>true</attach>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
