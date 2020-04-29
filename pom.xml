@@ -117,6 +117,7 @@
     <nuxeo.common.version>10.10</nuxeo.common.version>
     <nuxeo.runtime.version>10.10</nuxeo.runtime.version>
     <nuxeo.core.version>10.10</nuxeo.core.version>
+    <nuxeo.core.ecm.version>10.10.1</nuxeo.core.ecm.version>
     <nuxeo.services.version>10.10</nuxeo.services.version>
     <nuxeo.theme.version>10.10</nuxeo.theme.version>
     <nuxeo.jsf.version>10.10</nuxeo.jsf.version>
@@ -567,7 +568,7 @@
       <dependency>
         <groupId>org.nuxeo.ecm.core</groupId>
         <artifactId>nuxeo-core-schema</artifactId>
-        <version>${nuxeo.core.version}</version>
+        <version>${nuxeo.core.ecm.version}</version>
       </dependency>
       <dependency>
         <groupId>org.nuxeo.ecm.core</groupId>

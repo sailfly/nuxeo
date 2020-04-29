@@ -153,10 +153,11 @@ public class SchemaManagerImpl implements SchemaManager {
         recomputeCallbacks = new ArrayList<>();
         schemaDir = new File(Environment.getDefault().getTemp(), SCHEMAS_DIR_NAME);
         schemaDir.mkdirs();
+        clearSchemaDir();
 
         memorySchemaDir = new File(Environment.getDefault().getTemp(), MEMORY_SCHEMAS_DIR_NAME);
         memorySchemaDir.mkdirs();
-        clearSchemaDir();
+        cleanMemSchemaDir();
 
         registerBuiltinTypes();
     }
@@ -164,8 +165,16 @@ public class SchemaManagerImpl implements SchemaManager {
     protected void clearSchemaDir() {
         try {
             org.apache.commons.io.FileUtils.cleanDirectory(schemaDir);
-            org.apache.commons.io.FileUtils.cleanDirectory(memorySchemaDir);
+
         } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void cleanMemSchemaDir() {
+        try {
+            org.apache.commons.io.FileUtils.cleanDirectory(memorySchemaDir);
+        } catch(IOException e) {
             throw new RuntimeException(e);
         }
     }

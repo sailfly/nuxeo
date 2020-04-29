@@ -6,6 +6,7 @@
     <version>10.10</version>
   </parent>
   <artifactId>nuxeo-core-schema</artifactId>
+  <version>10.10.1</version>
   <name>Nuxeo Core Schema</name>
   <description>Nuxeo Core: Schema.</description>
   <dependencies>
@@ -40,6 +41,19 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <distributionManagement>
+    <repository>
+      <id>ecm-maven-dev</id>
+      <name>snapshotRepository</name>
+      <url>http://repo.hexinfo.cn:8000/artifactory/ecm-maven-dev</url>
+    </repository>
+    <snapshotRepository>
+      <id>ecm-maven-release</id>
+      <name>releaseRepository</name>
+      <url>http://repo.hexinfo.cn:8000/artifactory/ecm-maven-release</url>
+    </snapshotRepository>
+  </distributionManagement>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
