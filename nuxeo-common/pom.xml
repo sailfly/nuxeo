@@ -9,6 +9,7 @@
 
   <groupId>org.nuxeo.common</groupId>
   <artifactId>nuxeo-common</artifactId>
+  <version>10.10.1</version>
   <name>Nuxeo Common</name>
   <description>Nuxeo Common: utilities.</description>
 

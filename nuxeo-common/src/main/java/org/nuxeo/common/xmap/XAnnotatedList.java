@@ -132,8 +132,8 @@ public class XAnnotatedList extends XAnnotatedMember {
                     }
                 } else {
                     for (Object o : objects) {
-                        Element e = XMLBuilder.addElement(parent, path);
-                        XMLBuilder.toXML(o, e, xao);
+                        // modify at 20200616 Element e = XMLBuilder.addElement(parent, path);
+                        XMLBuilder.toXML(o, parent, xao);
                     }
                 }
             }
