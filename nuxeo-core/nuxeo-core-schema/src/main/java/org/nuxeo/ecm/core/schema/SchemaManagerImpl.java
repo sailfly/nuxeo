@@ -19,10 +19,32 @@
  */
 package org.nuxeo.ecm.core.schema;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.nuxeo.common.Environment;
+import org.nuxeo.common.xmap.XMap;
+import org.nuxeo.ecm.core.schema.types.AnyType;
+import org.nuxeo.ecm.core.schema.types.ComplexType;
+import org.nuxeo.ecm.core.schema.types.CompositeType;
+import org.nuxeo.ecm.core.schema.types.CompositeTypeImpl;
+import org.nuxeo.ecm.core.schema.types.Field;
+import org.nuxeo.ecm.core.schema.types.ListType;
+import org.nuxeo.ecm.core.schema.types.QName;
+import org.nuxeo.ecm.core.schema.types.Schema;
+import org.nuxeo.ecm.core.schema.types.Type;
+import org.nuxeo.ecm.core.schema.types.TypeException;
+import org.nuxeo.runtime.api.Framework;
+import org.nuxeo.runtime.model.RuntimeContext;
+import org.xml.sax.SAXException;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,23 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.nuxeo.common.Environment;
-import org.nuxeo.ecm.core.schema.types.AnyType;
-import org.nuxeo.ecm.core.schema.types.ComplexType;
-import org.nuxeo.ecm.core.schema.types.CompositeType;
-import org.nuxeo.ecm.core.schema.types.CompositeTypeImpl;
-import org.nuxeo.ecm.core.schema.types.Field;
-import org.nuxeo.ecm.core.schema.types.ListType;
-import org.nuxeo.ecm.core.schema.types.QName;
-import org.nuxeo.ecm.core.schema.types.Schema;
-import org.nuxeo.ecm.core.schema.types.Type;
-import org.nuxeo.ecm.core.schema.types.TypeException;
-import org.xml.sax.SAXException;
 
 /**
  * Schema Manager implementation.
@@ -129,10 +134,12 @@ public class SchemaManagerImpl implements SchemaManager {
 
     /**memory schema dir*/
     private File memorySchemaDir;
+    /**customize doctype*/
+    private File doctypeDir;
 
     public static final String SCHEMAS_DIR_NAME = "schemas";
-
-    public static final String MEMORY_SCHEMAS_DIR_NAME = "schemas_mem";
+    public static final String MEMORY_SCHEMAS_DIR_NAME = "extend_schemas";
+    public static final String DOCTYPE_DIR_NAME = "extend_doctype";
 
     /**
      * Default used for clearComplexPropertyBeforeSet if there is no XML configuration found.
@@ -157,24 +164,22 @@ public class SchemaManagerImpl implements SchemaManager {
 
         memorySchemaDir = new File(Environment.getDefault().getTemp(), MEMORY_SCHEMAS_DIR_NAME);
         memorySchemaDir.mkdirs();
-        cleanMemSchemaDir();
+
+        doctypeDir = new File(Environment.getDefault().getTemp(), DOCTYPE_DIR_NAME);
+        doctypeDir.mkdirs();
+
+        // copy mem schema
+        reloadSchemaFromLocal();
+        // read from local doctype folder
+        reloadDoctypeFromLocal();
 
         registerBuiltinTypes();
     }
 
     protected void clearSchemaDir() {
         try {
-            org.apache.commons.io.FileUtils.cleanDirectory(schemaDir);
-
+            FileUtils.cleanDirectory(schemaDir);
         } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void cleanMemSchemaDir() {
-        try {
-            org.apache.commons.io.FileUtils.cleanDirectory(memorySchemaDir);
-        } catch(IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -382,10 +387,9 @@ public class SchemaManagerImpl implements SchemaManager {
         }
     }
 
-    /*
+    /**
      * ===== Schemas =====
      */
-
     protected void recomputeSchemas() {
         schemas.clear();
         uriToSchema.clear();
@@ -402,13 +406,13 @@ public class SchemaManagerImpl implements SchemaManager {
                     log.warn("Schema " + name + " is redefined but will not be overridden");
                     continue;
                 }
-//                log.debug("Reregistering schema: " + name + " from " + sd.file);
-                log.debug("Reregistering schema: " + name + " from " + (sd.file != null ? sd.file : "runtime"));
+                log.debug(String.format("Reregistering schema: %s from %s", name, sd.file != null ? sd.file : "runtime"));
             } else {
-                log.debug("Registering schema: " + name + " from " + (sd.file != null ? sd.file : "runtime"));
+                log.debug(String.format("Registering schema: %s from %s", name, sd.file != null ? sd.file : "runtime"));
             }
             resolvedSchemas.put(name, sd);
         }
+
         for (SchemaBindingDescriptor sd : resolvedSchemas.values()) {
             try {
                 copyRuntimeSchema(sd);
@@ -426,6 +430,22 @@ public class SchemaManagerImpl implements SchemaManager {
         if (errors.getSuppressed().length > 0) {
             throw errors;
         }
+    }
+
+    /**
+     * 从运行时schemas_mem读取，并拷贝到schemas目录，且设置为resolvedSchemas
+     */
+    private void reloadSchemaFromLocal() {
+        // 从运行时schemas_mem读取，并拷贝到schemas目录，且设置为resolvedSchemas
+        File[] files = memorySchemaDir.listFiles();
+        if (files == null) {
+            return;
+        }
+
+        RuntimeContext context = Framework.getRuntime().getContext();
+        Arrays.stream(files).map(memFile -> new SchemaBindingDescriptor(FilenameUtils.getBaseName(memFile.getName()), memFile.getPath(),
+                FilenameUtils.getBaseName(memFile.getName()), true, context)).forEach(tempSd -> allSchemas.add(tempSd));
+        log.info(String.format("reload schema from local size %d end.", allSchemas.size()));
     }
 
     private void copyRuntimeSchema(SchemaBindingDescriptor sd) throws IOException {
@@ -449,13 +469,22 @@ public class SchemaManagerImpl implements SchemaManager {
 
     protected void copySchema(SchemaBindingDescriptor sd) throws IOException {
         if (sd.src == null || sd.src.length() == 0) {
-            // log.error("INLINE Schemas ARE NOT YET IMPLEMENTED!");
+             log.error("INLINE Schemas ARE NOT YET IMPLEMENTED!");
             return;
         }
         URL url = sd.context.getLocalResource(sd.src);
         if (url == null) {
             // try asking the class loader
             url = sd.context.getResource(sd.src);
+        }
+
+        if (url == null) {
+            // try load file
+            File sdFile = new File(sd.src);
+            boolean exists = sdFile.exists();
+            if (exists) {
+                url = sdFile.toURI().toURL();
+            }
         }
         if (url == null) {
             log.error("XSD Schema not found: " + sd.src);
@@ -469,16 +498,13 @@ public class SchemaManagerImpl implements SchemaManager {
 
     protected void loadSchema(SchemaBindingDescriptor sd) throws IOException, SAXException, TypeException {
         if (sd.file == null) {
-            // log.error("INLINE Schemas ARE NOT YET IMPLEMENTED!");
             return;
         }
-        // loadSchema calls this.registerSchema
         XSDLoader schemaLoader = new XSDLoader(this, sd);
         schemaLoader.loadSchema(sd.name, sd.prefix, sd.file, sd.xsdRootElement, sd.isVersionWritable);
         log.info("Registered schema: " + sd.name + " from " + sd.file);
     }
 
-    // called from XSDLoader
     protected void registerSchema(Schema schema) {
         schemas.put(schema.getName(), schema);
         Namespace ns = schema.getNamespace();
@@ -566,15 +592,17 @@ public class SchemaManagerImpl implements SchemaManager {
         return Collections.unmodifiableSet(noPerDocumentQueryFacets);
     }
 
-    /*
+    /**
      * ===== Document types =====
      */
-
     protected void recomputeDocumentTypes() {
         // effective descriptors with override
         // linked hash map to keep order for reproducibility
         Map<String, DocumentTypeDescriptor> dtds = new LinkedHashMap<>();
         for (DocumentTypeDescriptor dtd : allDocumentTypes) {
+            // write to local mem file
+            serializeDocType(dtd);
+
             String name = dtd.name;
             DocumentTypeDescriptor newDtd = dtd;
             if (dtd.append && dtds.containsKey(dtd.name)) {
@@ -585,7 +613,7 @@ public class SchemaManagerImpl implements SchemaManager {
         // recompute all types, parents first
         documentTypes.clear();
         documentTypesExtending.clear();
-        registerDocumentType(new DocumentTypeImpl(TypeConstants.DOCUMENT)); // Document
+        registerDocumentType(new DocumentTypeImpl(TypeConstants.DOCUMENT));
         for (String name : dtds.keySet()) {
             LinkedHashSet<String> stack = new LinkedHashSet<>();
             recomputeDocumentType(name, stack, dtds);
@@ -598,7 +626,7 @@ public class SchemaManagerImpl implements SchemaManager {
                 documentTypesForFacet.computeIfAbsent(facet, k -> new HashSet<>()).add(docType.getName());
             }
         }
-
+        log.info("reload document types from local size " + allDocumentTypes.size() + " end.");
     }
 
     protected DocumentTypeDescriptor mergeDocumentTypeDescriptors(DocumentTypeDescriptor src,
@@ -741,6 +769,55 @@ public class SchemaManagerImpl implements SchemaManager {
     public Set<String> getAllowedSubTypes(String typeName) {
         DocumentType dt = getDocumentType(typeName);
         return dt == null ? null : dt.getAllowedSubtypes();
+    }
+
+    private void reloadDoctypeFromLocal() {
+        File[] docTypeFiles = doctypeDir.listFiles();
+        if (docTypeFiles == null) {
+            return;
+        }
+
+        for (File docTypeFile : docTypeFiles) {
+            try {
+                XMap xmap = new XMap();
+                xmap.register(DocumentTypeDescriptor.class);
+
+                URL url = Thread.currentThread().getContextClassLoader().getResource(docTypeFile.getPath());
+                if (url == null) {
+                    boolean exists = docTypeFile.exists();
+                    if (exists) {
+                        url = docTypeFile.toURI().toURL();
+                    }
+                }
+
+                if (url == null) {
+                    log.warn("Load doctype  not found: " + docTypeFile.getName());
+                    return;
+                }
+
+                DocumentTypeDescriptor documentTypeDescriptor = (DocumentTypeDescriptor) xmap.load(url);
+                if (null != documentTypeDescriptor) {
+                    allDocumentTypes.add(documentTypeDescriptor);
+                }
+            } catch (Exception e) {
+                log.warn("Error load doctype " + docTypeFile.getName());
+            }
+        }
+
+        log.info("reload document types from local size " + allDocumentTypes.size() + " end.");
+    }
+
+    private void serializeDocType(DocumentTypeDescriptor dtd) {
+        if (null == dtd.getXmlElement()) {
+            return;
+        }
+
+        File file = new File(doctypeDir, dtd.name + ".xsd");
+        try {
+            FileUtils.writeStringToFile(file, dtd.xmlElement, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            log.warn("Error serialize doctype " + dtd.name, e);
+        }
     }
 
     /*

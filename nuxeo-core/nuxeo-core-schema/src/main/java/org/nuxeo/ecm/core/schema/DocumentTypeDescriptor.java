@@ -46,7 +46,7 @@ public class DocumentTypeDescriptor {
     public String name;
 
     @XNodeList(value = "schema", type = SchemaDescriptor[].class, componentType = SchemaDescriptor.class)
-    public SchemaDescriptor[] schemas;
+    public SchemaDescriptor[] schemas = new SchemaDescriptor[0];
 
     @XNode("@extends")
     public String superTypeName;
@@ -65,6 +65,9 @@ public class DocumentTypeDescriptor {
 
     @XNodeList(value = "subtypes-forbidden/type", type = String[].class, componentType = String.class)
     public String[] forbiddenSubtypes = new String[0];
+
+    @XNode("@xmlElement")
+    public String xmlElement;
 
     public DocumentTypeDescriptor() {
     }
@@ -89,11 +92,20 @@ public class DocumentTypeDescriptor {
         this.append = append;
     }
 
+    public String getXmlElement() {
+        return xmlElement;
+    }
+
+    public void setXmlElement(String xmlElement) {
+        this.xmlElement = xmlElement;
+    }
+
     @Override
     public String toString() {
         return "DocType: " + name;
     }
 
+    @Override
     public DocumentTypeDescriptor clone() {
         DocumentTypeDescriptor clone = new DocumentTypeDescriptor();
         clone.name = name;
