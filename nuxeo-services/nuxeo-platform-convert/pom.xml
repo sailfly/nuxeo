@@ -8,6 +8,7 @@
   </parent>
 
   <artifactId>nuxeo-platform-convert</artifactId>
+  <version>10.10.1</version>
   <name>Nuxeo Conversion Platform service</name>
   <description>
     Provide High level conversion service
@@ -85,4 +86,17 @@
     </dependency>
   </dependencies>
 
+
+  <distributionManagement>
+    <repository>
+      <id>ecm-maven-release</id>
+      <name>releaseRepository</name>
+      <url>http://repo.hexinfo.cn:8000/artifactory/ecm-maven-release</url>
+    </repository>
+    <snapshotRepository>
+      <id>ecm-maven-dev</id>
+      <name>snapshotRepository</name>
+      <url>http://repo.hexinfo.cn:8000/artifactory/ecm-maven-dev</url>
+    </snapshotRepository>
+  </distributionManagement>
 </project>

@@ -45,4 +45,16 @@
     </dependency>
   </dependencies>
 
+  <distributionManagement>
+      <repository>
+        <id>ecm-maven-release</id>
+        <name>releaseRepository</name>
+        <url>http://repo.hexinfo.cn:8000/artifactory/ecm-maven-release</url>
+      </repository>
+      <snapshotRepository>
+        <id>ecm-maven-dev</id>
+        <name>snapshotRepository</name>
+        <url>http://repo.hexinfo.cn:8000/artifactory/ecm-maven-dev</url>
+      </snapshotRepository>
+  </distributionManagement>
 </project>

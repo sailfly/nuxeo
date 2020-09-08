@@ -21,6 +21,7 @@ package org.nuxeo.ecm.platform.convert.plugins;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -79,7 +80,7 @@ public class LibreOfficeConverter extends CommandLineConverter {
     }
 
     private void deleteTempDirectory(String tempPath) {
-        Path path = Paths.get(tempPath);
+        Path path = Paths.get(URI.create(tempPath));
         if (!Files.exists(path)) {
             return;
         }
